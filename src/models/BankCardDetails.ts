@@ -1,21 +1,21 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityBankCardDetail extends Model {}
+export class BankCardDetail extends Model {}
 
-CommodityBankCardDetail.init(
+BankCardDetail.init(
     {
-        id: {
+        bankCardDetailId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
             primaryKey: true,
-            type: DataTypes.INTEGER,
+            defaultValue:DataTypes.UUIDV4
         },
         userId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
-                model: "CommodityUsers",
+                model: "Users",
                 key: "id",
             },
         },

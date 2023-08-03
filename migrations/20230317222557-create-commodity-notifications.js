@@ -1,64 +1,53 @@
-"use strict";
+'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-    async up(queryInterface, Sequelize) {
-        /**
-         * Add altering commands here.
-         *
-         * Example:
-         * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
-         */
-        await queryInterface.createTable("CommodityNotifications", {
-            id: {
-                allowNull: false,
-                autoIncrement: true,
-                primaryKey: true,
-                type: Sequelize.INTEGER,
-            },
-            userId: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                references: {
-                    model: "CommodityUsers",
-                    key: "id",
-                },
-                onDelete: "CASCADE",
-                onUpdate: "CASCADE",
-            },
-            title: {
-                type: Sequelize.STRING,
-            },
-            message: {
-                type: Sequelize.STRING,
-            },
-            notificationFrom: {
-                type: Sequelize.INTEGER,
-            },
-            readStatus: {
-                type: Sequelize.BOOLEAN,
-            },
-            createdAt: {
-                allowNull: false,
-                type: Sequelize.DATE,
-            },
-            notificationType: {
-                type: Sequelize.STRING,
-            },
-            updatedAt: {
-                allowNull: true,
-                type: Sequelize.DATE,
-            },
-        });
-    },
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('Notifications', {
+      notificationId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        primaryKey: true,
+        defaultValue: Sequelize.UUIDV4,
+      },
+      userId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "userId",
+        },
+      },
+      title: {
+        type: Sequelize.STRING,
+      },
+      message: {
+        type: Sequelize.STRING,
+      },
+      readStatus: {
+        type: Sequelize.ENUM("read", "unread"),
+        defaultValue: 'unread',
+      },
+      notificationFromId: {
+        type: Sequelize.UUID,
+      },
+      notificationForId: {
+        type: Sequelize.UUID,
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      notificationType: {
+        type: Sequelize.ENUM("purchase", 'transaction', "other"),
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+  },
 
-    async down(queryInterface, Sequelize) {
-        /**
-         * Add reverting commands here.
-         *
-         * Example:
-         * await queryInterface.dropTable('users');
-         */
-        await queryInterface.dropTable("CommodityNotifications");
-    },
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('Notifications');
+  }
 };

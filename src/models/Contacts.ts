@@ -1,15 +1,15 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityUserContact extends Model {}
+export class Contact extends Model {}
 
-CommodityUserContact.init(
+Contact.init(
     {
-        id: {
+        contactId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
             primaryKey: true,
-            type: DataTypes.INTEGER,
+            defaultValue:DataTypes.UUIDV4
         },
         country: {
             type: DataTypes.STRING,
@@ -27,12 +27,12 @@ CommodityUserContact.init(
             type: DataTypes.JSON,
         },
         userId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             unique: true,
             allowNull: false,
             references: {
-                model: "CommodityUsers",
-                key: "id",
+                model: "Users",
+                key: "userId",
             },
         },
         createdAt: {

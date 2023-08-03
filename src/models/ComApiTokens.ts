@@ -1,22 +1,22 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityApiToken extends Model {}
+export class ApiToken extends Model {}
 
-CommodityApiToken.init(
+ApiToken.init(
     {
-        id: {
+        tokenId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
             primaryKey: true,
-            type: DataTypes.INTEGER,
+            defaultValue:DataTypes.UUIDV4
         },
         userId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUIDV4,
             allowNull: false,
             references: {
-                model: "CommodityUsers",
-                key: "id",
+                model: "Users",
+                key: "userId",
             },
         },
         apiToken: {

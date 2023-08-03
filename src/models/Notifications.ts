@@ -1,22 +1,22 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityNotification extends Model {}
+export class Notification extends Model {}
 
-CommodityNotification.init(
+Notification.init(
     {
-        id: {
+        notificationId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
             primaryKey: true,
-            type: DataTypes.INTEGER,
+            defaultValue:DataTypes.UUIDV4
         },
         userId: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
-                model: "CommodityUsers",
-                key: "id",
+                model: "Users",
+                key: "userId",
             },
         },
         title: {
@@ -26,17 +26,21 @@ CommodityNotification.init(
             type: DataTypes.STRING,
         },
         readStatus: {
-            type: DataTypes.BOOLEAN,
+            type: DataTypes.ENUM("read","unread"),
+            defaultValue:'unread'
         },
-        notificationFrom: {
-            type: DataTypes.INTEGER,
+        notificationFromId: {
+            type: DataTypes.UUID,
+        },
+        notificationForId: {
+            type: DataTypes.UUID,
         },
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE,
         },
         notificationType: {
-            type: DataTypes.STRING,
+            type: DataTypes.ENUM("purchase",'transaction',"other"),
         },
         updatedAt: {
             allowNull: true,

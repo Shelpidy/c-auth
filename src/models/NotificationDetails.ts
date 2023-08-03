@@ -1,26 +1,31 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityTransaction extends Model {}
+export class NotificationDetail extends Model {}
 
-CommodityTransaction.init(
+NotificationDetail.init(
     {
-        id: {
+        notificationDetailId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
             primaryKey: true,
-            type: DataTypes.INTEGER,
+            defaultValue:DataTypes.UUIDV4
         },
-        transferorAccountNumber: {
+        userId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            references: {
+                model: "Users",
+                key: "userId",
+            },
+        },
+        notificationToken: {
             type: DataTypes.STRING,
         },
-        transfereeAccountNumber: {
+        deviceName: {
             type: DataTypes.STRING,
         },
-        amount: {
-            type: DataTypes.STRING,
-        },
-        transactionId: {
+        deviceId: {
             type: DataTypes.STRING,
         },
         createdAt: {

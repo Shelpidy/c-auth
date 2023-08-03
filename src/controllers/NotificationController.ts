@@ -1,14 +1,11 @@
 import express from "express";
-import { Commodity } from "../models/Commodities";
-import { CommodityNotification } from "../models/ComNotifications";
+import { Notification } from "../models/Notifications";
 import {
     responseStatus,
     responseStatusCode,
     getResponseBody,
 } from "../utils/Utils";
-import CommodityProduct from "../models/ComProducts";
-import { CommodityProductAffiliate } from "../models/ComProductAffiliates";
-import { CommodityUser } from "../models/ComUsers";
+import  User from "../models/Users";
 
 export default (router: express.Application) => {
     //////////////////////// GET NOTIFICATIONS BY USERID //////////////////////////
@@ -18,9 +15,9 @@ export default (router: express.Application) => {
         async (request: express.Request, response: express.Response) => {
             try {
                 let userId = request.params.userId;
-                let notifications = await CommodityNotification.findAll({
+                let notifications = await Notification.findAll({
                     where: { userId },
-                    order: [["id", "DESC"]],
+                    order: [["createdAt", "DESC"]],
                 });
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
@@ -42,10 +39,10 @@ export default (router: express.Application) => {
         "/api/notifications/",
         async (request: express.Request, response: express.Response) => {
             try {
-                let notifications = await CommodityNotification.findAll();
+                let notifications = await Notification.findAll();
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    data: notifications,
+                    items: notifications,
                 });
             } catch (err) {
                 console.log(err);
@@ -60,12 +57,12 @@ export default (router: express.Application) => {
     ///////////////////////////// DELETE A NOTIFICATION ///////////////////////////
 
     router.delete(
-        "/api/notifications/:id",
+        "/notifications/:notificationId",
         async (request: express.Request, response: express.Response) => {
             try {
-                let id = request.params.id;
-                let deleteObj = await CommodityNotification.destroy({
-                    where: { id },
+                let notificationId = request.params.notificationId;
+                let deleteObj = await Notification.destroy({
+                    where: { notificationId },
                 });
                 if (deleteObj > 0) {
                     response.status(responseStatusCode.DELETED).json({
@@ -78,14 +75,14 @@ export default (router: express.Application) => {
                         .status(responseStatusCode.UNPROCESSIBLE_ENTITY)
                         .json({
                             status: responseStatus.UNPROCESSED,
-                            message: `Failed to delete notification with Id ${id}`,
+                            message: `Failed to delete notification with Id ${notificationId}`,
                         });
                 }
             } catch (err) {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    data: err,
+                    message:String(err),
                 });
             }
         }
@@ -98,7 +95,7 @@ export default (router: express.Application) => {
         async (request: express.Request, response: express.Response) => {
             try {
                 let notId = request.params.notificationId;
-                const notification = await CommodityNotification.findByPk(
+                const notification = await Notification.findByPk(
                     notId
                 );
                 if (!notification) {
@@ -111,7 +108,7 @@ export default (router: express.Application) => {
                             )
                         );
                 }
-                const newNot = await CommodityNotification.update(
+                const newNot = await Notification.update(
                     { readStatus: true },
                     {
                         where: { id: notId },
@@ -119,7 +116,7 @@ export default (router: express.Application) => {
                 );
                 response.status(responseStatusCode.ACCEPTED).json({
                     status: responseStatus.SUCCESS,
-                    data: {
+                    item: {
                         affectedRow: newNot,
                     },
                 });
@@ -127,7 +124,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    data: err,
+                    message:String(err),
                 });
             }
         }
@@ -140,7 +137,7 @@ export default (router: express.Application) => {
         async (request: express.Request, response: express.Response) => {
             try {
                 let userId = request.params.userId;
-                let deleteObj = await CommodityNotification.destroy({
+                let deleteObj = await Notification.destroy({
                     where: { userId },
                 });
                 if (deleteObj > 0) {
@@ -162,7 +159,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    data: err,
+                    message:String(err),
                 });
             }
         }
@@ -170,35 +167,35 @@ export default (router: express.Application) => {
 
     //////////////////// GET NOTIFICATION VIEW FOR PRODUCT ////////////////
 
-    router.get(
-        "/api/notifications/product/:productId",
-        async (request: express.Request, response: express.Response) => {
-            try {
-                let productId = request.params.productId;
-                let product = await CommodityProduct.findOne({
-                    where: { id: productId },
-                });
-                if (!product) {
-                    return response.status(responseStatusCode.NOT_FOUND).json({
-                        status: responseStatus.ERROR,
-                        message: `The product with productId ${productId} does not exist`,
-                    });
-                }
-                let owner = await CommodityUser.findByPk(
-                    product.getDataValue("userId")
-                );
-                // let notifications = await CommodityNotification.findAll();
-                response.status(responseStatusCode.OK).json({
-                    status: responseStatus.SUCCESS,
-                    data: { owner, product },
-                });
-            } catch (err) {
-                console.log(err);
-                response.status(responseStatusCode.BAD_REQUEST).json({
-                    status: responseStatus.ERROR,
-                    message: err,
-                });
-            }
-        }
-    );
+    // router.get(
+    //     "/api/notifications/product/:productId",
+    //     async (request: express.Request, response: express.Response) => {
+    //         try {
+    //             let productId = request.params.productId;
+    //             let product = await Product.findOne({
+    //                 where: { id: productId },
+    //             });
+    //             if (!product) {
+    //                 return response.status(responseStatusCode.NOT_FOUND).json({
+    //                     status: responseStatus.ERROR,
+    //                     message: `The product with productId ${productId} does not exist`,
+    //                 });
+    //             }
+    //             let owner = await User.findByPk(
+    //                 product.getDataValue("userId")
+    //             );
+    //             // let notifications = await Notification.findAll();
+    //             response.status(responseStatusCode.OK).json({
+    //                 status: responseStatus.SUCCESS,
+    //                 data: { owner, product },
+    //             });
+    //         } catch (err) {
+    //             console.log(err);
+    //             response.status(responseStatusCode.BAD_REQUEST).json({
+    //                 status: responseStatus.ERROR,
+    //                 message: err,
+    //             });
+    //         }
+    //     }
+    // );
 };

@@ -1,7 +1,7 @@
-import { Model, DataTypes } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityUser extends Model {
+class User extends Model {
     public getFullname() {
         return (
             this.get("firstName") +
@@ -13,16 +13,13 @@ export class CommodityUser extends Model {
     }
 }
 
-CommodityUser.init(
+User.init(
     {
-        id: {
+        userId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
-            type: DataTypes.INTEGER,
             primaryKey: true,
-        },
-        profileImage: {
-            type: DataTypes.STRING,
+            defaultValue:DataTypes.UUIDV4
         },
         firstName: {
             type: DataTypes.STRING,
@@ -30,8 +27,10 @@ CommodityUser.init(
         middleName: {
             type: DataTypes.STRING,
         },
-
         lastName: {
+            type: DataTypes.STRING,
+        },
+        profileImage: {
             type: DataTypes.STRING,
         },
         password: {
@@ -45,6 +44,7 @@ CommodityUser.init(
         },
         accountNumber: {
             type: DataTypes.STRING,
+            allowNull: true,
             unique: true,
         },
         dob: {
@@ -55,14 +55,29 @@ CommodityUser.init(
             unique: true,
             allowNull: false,
         },
+        verified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue:false
+        },
+        verificationRank:{
+            type:DataTypes.ENUM("low","medium","high")
+        },
         createdAt: {
-            allowNull: false,
             type: DataTypes.DATE,
+            allowNull: false,
         },
         updatedAt: {
-            allowNull: true,
             type: DataTypes.DATE,
         },
     },
-    { sequelize }
+    {
+        sequelize,
+        modelName: "User",
+        tableName: "Users",
+        timestamps: true,
+        createdAt: "createdAt",
+        updatedAt: "updatedAt",
+    }
 );
+
+export default User;

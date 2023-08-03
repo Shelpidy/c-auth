@@ -1,39 +1,39 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "../database/connection";
 
-export class CommodityTransferee extends Model {}
+export class Transferee extends Model {}
 
-CommodityTransferee.init(
+Transferee.init(
     {
-        id: {
+        tranfereeId: {
+            type: DataTypes.UUID,
             allowNull: false,
-            autoIncrement: true,
             primaryKey: true,
-            type: DataTypes.INTEGER,
+            defaultValue:DataTypes.UUIDV4
         },
-        transferorId: {
-            type: DataTypes.INTEGER,
+        transferFromId: {
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
-                model: "CommodityUsers",
-                key: "id",
+                model: "Users",
+                key: "userId",
             },
         },
-        transfereeId: {
-            type: DataTypes.INTEGER,
+        transferToId: {
+            type: DataTypes.UUID,
             allowNull: false,
             references: {
-                model: "CommodityUsers",
-                key: "id",
+                model: "Users",
+                key: "userId",
             },
         },
         transfereeName: {
             type: DataTypes.STRING,
         },
-        transfereeAccountNumber: {
+        transferToAccountNumber: {
             type: DataTypes.STRING,
         },
-        transferorAccountNumber: {
+        transferFromAccountNumber: {
             type: DataTypes.STRING,
         },
         createdAt: {

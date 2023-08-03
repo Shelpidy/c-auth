@@ -1,67 +1,43 @@
-"use strict";
+'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-    async up(queryInterface, Sequelize) {
-        /**
-         * Add altering commands here.
-         *
-         * Example:
-         * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
-         */
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('NotificationDetails', {
+      notificationDetailId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        primaryKey: true,
+        defaultValue: Sequelize.UUIDV4,
+      },
+      userId: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: "Users",
+          key: "userId",
+        },
+      },
+      notificationToken: {
+        type: Sequelize.STRING,
+      },
+      deviceName: {
+        type: Sequelize.STRING,
+      },
+      deviceId: {
+        type: Sequelize.STRING,
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: true,
+        type: Sequelize.DATE,
+      },
+    });
+  },
 
-        await queryInterface.createTable("CommodityNotificationDetails", {
-            id: {
-                allowNull: false,
-                autoIncrement: true,
-                primaryKey: true,
-                type: Sequelize.INTEGER,
-            },
-
-            profileImage: {
-                type: Sequelize.STRING,
-            },
-
-            userId: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                references: {
-                    model: "CommodityUsers",
-                    key: "id",
-                },
-                onDelete: "CASCADE",
-                onUpdate: "CASCADE",
-            },
-            notificationToken: {
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            deviceName: {
-                type: Sequelize.STRING,
-            },
-            deviceId: {
-                type: Sequelize.STRING,
-                unique: true,
-            },
-            createdAt: {
-                allowNull: false,
-                type: Sequelize.DATE,
-            },
-            updatedAt: {
-                allowNull: true,
-                type: Sequelize.DATE,
-            },
-        });
-    },
-
-    async down(queryInterface, Sequelize) {
-        /**
-         * Add reverting commands here.
-         *
-         * Example:
-         * await queryInterface.dropTable('users');
-         */
-
-        await queryInterface.dropTable("CommodityNotificationDetails");
-    },
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('NotificationDetails');
+  }
 };

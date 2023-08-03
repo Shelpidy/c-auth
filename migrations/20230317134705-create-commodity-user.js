@@ -1,12 +1,11 @@
 "use strict";
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
-    async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("CommodityUsers", {
-            id: {
-                allowNull: false,
-                autoIncrement: true,
-                type: Sequelize.INTEGER,
+    up: async (queryInterface, Sequelize) => {
+        await queryInterface.createTable("Users", {
+            userId: {
+                type: Sequelize.UUID,
+                defaultValue: Sequelize.UUIDV4,
                 primaryKey: true,
             },
             firstName: {
@@ -43,17 +42,26 @@ module.exports = {
                 unique: true,
                 allowNull: false,
             },
+            verified: {
+                type: Sequelize.BOOLEAN,
+                defaultValue:false
+            },
+            verificationRank:{
+                type:Sequelize.ENUM("low","medium","high")
+            },
             createdAt: {
-                allowNull: false,
                 type: Sequelize.DATE,
+                allowNull: false,
+                defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
             },
             updatedAt: {
-                allowNull: true,
                 type: Sequelize.DATE,
+                defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
             },
         });
     },
-    async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable("CommodityUsers");
+
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.dropTable("Users");
     },
 };
