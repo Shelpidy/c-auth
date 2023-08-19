@@ -9,7 +9,7 @@ Contact.init(
             type: DataTypes.UUID,
             allowNull: false,
             primaryKey: true,
-            defaultValue:DataTypes.UUIDV4
+            defaultValue: DataTypes.UUIDV4,
         },
         country: {
             type: DataTypes.STRING,

@@ -1,55 +1,56 @@
+version: '3'
+
 services:
-    commodity1:
-        container_name: commodity_container_1
-        build: .
-        ports:
-            - 1111:5000
-        environment:
-            - PORT=5000
-            - MAIL_PORT=${MAIL_PORT}
-            - MAIL_HOST=${MAIL_HOST}
-            - MAIL_USER=${MAIL_USER}
-            - MAIL_PASS=${MAIL_PASS}
-            - PG_DB_PASSWORD=${PG_DB_PASSWORD}
-            - PG_DB_USERNAME=${PG_DB_USERNAME}
-            - PG_DB_HOST=${PG_DB_HOST}
-            - PG_DB_NAME=${PG_DB_NAME}
-            - API_ACCESS_KEY=${API_ACCESS_KEY}
-            - SMS_API_KEY=${SMS_API_KEY}
-            - SMS_SECRET_KEY=${SMS_SECRET_KEY}
-    commodity2:
-        container_name: commodity_container_2
-        build: .
-        ports:
-            - 2222:5000
-        environment:
-            - PORT=5000
-              - MAIL_PORT=${MAIL_PORT}
-              - MAIL_HOST=${MAIL_HOST}
-              - MAIL_USER=${MAIL_USER}
-              - MAIL_PASS=${MAIL_PASS}
-              - PG_DB_PASSWORD=${PG_DB_PASSWORD}
-              - PG_DB_USERNAME=${PG_DB_USERNAME}
-              - PG_DB_HOST=${PG_DB_HOST}
-              - PG_DB_NAME=${PG_DB_NAME}
-              - API_ACCESS_KEY=${API_ACCESS_KEY}
-              - SMS_API_KEY=${SMS_API_KEY}
-              - SMS_SECRET_KEY=${SMS_SECRET_KEY}
-    commodity3:
-        container_name: commodity_container_3
-        build: .
-        ports:
-            - 3333:5000
-        environment:
-            - PORT=5000
-              - MAIL_PORT=${MAIL_PORT}
-              - MAIL_HOST=${MAIL_HOST}
-              - MAIL_USER=${MAIL_USER}
-              - MAIL_PASS=${MAIL_PASS}
-              - PG_DB_PASSWORD=${PG_DB_PASSWORD}
-              - PG_DB_USERNAME=${PG_DB_USERNAME}
-              - PG_DB_HOST=${PG_DB_HOST}
-              - PG_DB_NAME=${PG_DB_NAME}
-              - API_ACCESS_KEY=${API_ACCESS_KEY}
-              - SMS_API_KEY=${SMS_API_KEY}
-              - SMS_SECRET_KEY=${SMS_SECRET_KEY}
+  zookeeper1:
+    image: wurstmeister/zookeeper
+    ports:
+      - 2181:2181
+    restart: unless-stopped
+
+  kafka1:
+    image: wurstmeister/kafka
+    ports:
+      - 9092:9092
+    volumes:
+      - kafka1-data:/kafka/data
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_TOPICS: |
+        ADD_USER, DELETE_USER, UPDATE_USER,
+        UPDATE_USER_VERIFICATION, ADD_NOTIFICATION,
+        TRANSFER_COMMODITY, BUY_COMMODITY,
+        BUY_PRODUCT, DELETE_TRANSACTION
+    restart: unless-stopped
+    depends_on:
+      - zookeeper1
+
+  zookeeper2:
+    image: wurstmeister/zookeeper
+    ports:
+      - 2182:2181
+    restart: unless-stopped
+
+  kafka2:
+    image: wurstmeister/kafka
+    ports:
+      - 9093:9092
+    volumes:
+      - kafka2-data:/kafka/data
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9093
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper2:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_TOPICS: |
+        ADD_USER, DELETE_USER, UPDATE_USER,
+        UPDATE_USER_VERIFICATION, ADD_NOTIFICATION,
+        TRANSFER_COMMODITY, BUY_COMMODITY,
+        BUY_PRODUCT, DELETE_TRANSACTION
+    restart: unless-stopped
+    depends_on:
+      - zookeeper2
+
+volumes: 
+  kafka1-data:
+  kafka2-data:

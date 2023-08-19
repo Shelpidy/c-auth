@@ -20,28 +20,27 @@ interface NotificationObject {
     message: string;
     notificationFrom: number;
     notificationType: string;
-  }
+}
 
-  // Function to add a notification
-  export async function addNotification(notificationData: NotificationObject) {
+// Function to add a notification
+export async function addNotification(notificationData: NotificationObject) {
     try {
-      const { userId, title, message, notificationFrom, notificationType } = notificationData;
-      const notification = await Notification.create({
-        userId,
-        title,
-        message,
-        readStatus: false,
-        notificationFrom,
-        createdAt: new Date(),
-        notificationType,
-      });
-      return notification;
-
+        const { userId, title, message, notificationFrom, notificationType } =
+            notificationData;
+        const notification = await Notification.create({
+            userId,
+            title,
+            message,
+            readStatus: false,
+            notificationFrom,
+            createdAt: new Date(),
+            notificationType,
+        });
+        return notification;
     } catch (error) {
-      throw error
+        throw error;
     }
-  }
-
+}
 
 export async function generateAccountNumber(id: string | any) {
     let numOfDigit: number = String(id).length;
@@ -67,7 +66,6 @@ export async function generateAccountNumber(id: string | any) {
         return numOfDigit.toString() + "COM" + (id * 1000000000).toString();
     }
 }
-
 
 export async function getIdFromAccountNumber(accountNumber: any | string) {
     let c = accountNumber.split("COM")[1];
@@ -95,7 +93,6 @@ export async function getIdFromAccountNumber(accountNumber: any | string) {
     }
     // return parseInt(c);
 }
-
 
 export async function smsConfirmationMessage() {
     let randCode = Math.floor(Math.random() * (9999 - 1000) + 10000);
@@ -192,14 +189,14 @@ export async function decryptBankCardNumber(token: string) {
 }
 
 export async function hashData(_data: any) {
-    let data = String(_data)
+    let data = String(_data);
     let salt = await bcrypt.genSalt(10);
     let encryptedData = await bcrypt.hash(data, salt);
     return encryptedData;
 }
 
 export async function matchWithHashedData(_data: any, hashedData: string) {
-    let data = String(_data)
+    let data = String(_data);
     let isMatch = await bcrypt.compare(data, hashedData);
     return isMatch;
 }
@@ -245,7 +242,6 @@ export async function getPhoneNumberCompany(
     return "qcell";
 }
 
-
 export const getResponseBody = (
     status: string,
     message?: string,
@@ -263,7 +259,7 @@ export const responseStatusCode = {
     OK: 200,
     CREATED: 201,
     ACCEPTED: 202,
-    DELETED:203,
+    DELETED: 203,
     NOT_FOUND: 404,
     BAD_REQUEST: 400,
     UNPROCESSIBLE_ENTITY: 422,
@@ -283,7 +279,6 @@ type TransferCommodityParams = {
     amount: number;
 };
 
-
 // export const buyCommodity = async(userId:any,amount:number)=>{
 //     try{
 //         let commodity = await Commodity.findByPk(userId)
@@ -299,7 +294,7 @@ type TransferCommodityParams = {
 //                                     notificationType: "transaction",
 //                                 });
 //         await notification.sendNotification()
-        
+
 //     }
 //     else{
 //         await Commodity.create({balance:amount,userId})
@@ -316,26 +311,30 @@ type TransferCommodityParams = {
 //     }catch(err){
 //         throw err
 //     }
-      
-// }
 
+// }
 
 export function hasPassedOneMonth(date: Date): boolean {
     const currentDate = new Date();
-    const oneMonthAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, currentDate.getDate());
+    const oneMonthAgo = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - 1,
+        currentDate.getDate()
+    );
     return date < oneMonthAgo;
-  }
-  
-  // Example usage
+}
 
+// Example usage
 
-  const SERVER_ID = process.env.SERVER_ID;
+const SERVER_ID = process.env.SERVER_ID;
 
 interface UserType {
     userId: string;
     firstName?: string;
     middleName?: string;
     lastName?: string;
+    verified?: boolean;
+    verificationRank?: "low" | "medium" | "high";
     profileImage?: string;
     password?: string;
     pinCode?: string;
@@ -345,9 +344,9 @@ interface UserType {
     email: string;
     createdAt: Date;
     updatedAt?: Date;
-  }
+}
 
-export async function addUser(data:UserType) {
+export async function addUser(data: UserType) {
     try {
         let personal = data;
         let newPersonalInfo;
@@ -363,14 +362,12 @@ export async function addUser(data:UserType) {
             "User created successfully.",
             savePersonalData
         );
-    } catch (err) { 
+    } catch (err) {
         throw err;
     }
 }
 
-
-
-export async function deleteUser(data:{userId:Pick<UserType,'userId'>}) {
+export async function deleteUser(data: { userId: Pick<UserType, "userId"> }) {
     try {
         let { userId } = data;
         let deleteObj = await User.destroy({
@@ -384,14 +381,21 @@ export async function deleteUser(data:{userId:Pick<UserType,'userId'>}) {
     }
 }
 
-export async function updateUserVerification(data:{verificationData:{verified:boolean,verificationRank:string},userId:string}) {
+type Verification = {
+    verificationData: { verified: boolean; verificationRank: string };
+    userId: string;
+};
+
+export async function updateUserVerification(data: Verification) {
     try {
-        let {verificationData,userId } = data;
+        let { verificationData, userId } = data;
         let personalInfo = await User.findOne({
             where: { userId },
         });
         if (personalInfo) {
-            let upatedResponse = await User.update(verificationData,{where:{userId}})
+            let upatedResponse = await User.update(verificationData, {
+                where: { userId },
+            });
             console.log(
                 `Server with Id ${SERVER_ID} Row Affected:, ${upatedResponse[0]}`
             );
@@ -403,7 +407,11 @@ export async function updateUserVerification(data:{verificationData:{verified:bo
     }
 }
 
-export async function updateUser(data:{key:string,value:any,userId:string}) {
+export async function updateUser(data: {
+    key: string;
+    value: any;
+    userId: string;
+}) {
     try {
         let { key, value, userId } = data;
         let personalInfo = await User.findOne({
@@ -436,5 +444,3 @@ export async function updateUser(data:{key:string,value:any,userId:string}) {
         throw err;
     }
 }
-
-  

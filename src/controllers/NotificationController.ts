@@ -5,13 +5,13 @@ import {
     responseStatusCode,
     getResponseBody,
 } from "../utils/Utils";
-import  User from "../models/Users";
+import User from "../models/Users";
 
 export default (router: express.Application) => {
     //////////////////////// GET NOTIFICATIONS BY USERID //////////////////////////
 
     router.get(
-        "/api/notifications/:userId",
+        "/notifications/:userId",
         async (request: express.Request, response: express.Response) => {
             try {
                 let userId = request.params.userId;
@@ -36,13 +36,13 @@ export default (router: express.Application) => {
     ///////////////////////////// GET ALL NOTIFICATIONS ///////////////////////////////////
 
     router.get(
-        "/api/notifications/",
+        "/notifications/",
         async (request: express.Request, response: express.Response) => {
             try {
                 let notifications = await Notification.findAll();
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: notifications,
+                    data: notifications,
                 });
             } catch (err) {
                 console.log(err);
@@ -82,7 +82,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -91,13 +91,11 @@ export default (router: express.Application) => {
     ///////////////////////// ADD READ STATUS /////////////////////////////
 
     router.put(
-        "/api/notifications/read/:notificationId",
+        "/notifications/read/:notificationId",
         async (request: express.Request, response: express.Response) => {
             try {
                 let notId = request.params.notificationId;
-                const notification = await Notification.findByPk(
-                    notId
-                );
+                const notification = await Notification.findByPk(notId);
                 if (!notification) {
                     return response
                         .status(responseStatusCode.NOT_FOUND)
@@ -116,7 +114,7 @@ export default (router: express.Application) => {
                 );
                 response.status(responseStatusCode.ACCEPTED).json({
                     status: responseStatus.SUCCESS,
-                    item: {
+                    data: {
                         affectedRow: newNot,
                     },
                 });
@@ -124,7 +122,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -133,7 +131,7 @@ export default (router: express.Application) => {
     /////////////////////// DELETE USER NOTIFICATIONS //////////////////////
 
     router.delete(
-        "/api/notifications/del/:userId",
+        "/notifications/del/:userId",
         async (request: express.Request, response: express.Response) => {
             try {
                 let userId = request.params.userId;
@@ -159,7 +157,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -168,7 +166,7 @@ export default (router: express.Application) => {
     //////////////////// GET NOTIFICATION VIEW FOR PRODUCT ////////////////
 
     // router.get(
-    //     "/api/notifications/product/:productId",
+    //     "/notifications/product/:productId",
     //     async (request: express.Request, response: express.Response) => {
     //         try {
     //             let productId = request.params.productId;

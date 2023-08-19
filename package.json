@@ -16,7 +16,7 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-     "dependencies": {
+    "dependencies": {
         "@types/node": "^18.11.18",
         "@types/nodemailer": "^6.4.7",
         "@vonage/server-sdk": "^3.2.0",

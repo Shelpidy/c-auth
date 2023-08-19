@@ -23,15 +23,15 @@ var jumpToCode = (function init() {
 
     function toggleClass(index) {
         missingCoverageElements
-            .item(currentIndex)
+            .data(currentIndex)
             .classList.remove('highlighted');
-        missingCoverageElements.item(index).classList.add('highlighted');
+        missingCoverageElements.data(index).classList.add('highlighted');
     }
 
     function makeCurrent(index) {
         toggleClass(index);
         currentIndex = index;
-        missingCoverageElements.item(index).scrollIntoView({
+        missingCoverageElements.data(index).scrollIntoView({
             behavior: 'smooth',
             block: 'center',
             inline: 'center'

@@ -27,7 +27,7 @@ CommodityController(app);
 TransactionController(app);
 NotificationController(app);
 MarketingController(app);
-GeneralControllers(app)
+GeneralControllers(app);
 
 app.get("/", (request: express.Request, response: express.Response) => {
     response.status(200).json({

@@ -9,7 +9,7 @@ Notification.init(
             type: DataTypes.UUID,
             allowNull: false,
             primaryKey: true,
-            defaultValue:DataTypes.UUIDV4
+            defaultValue: DataTypes.UUIDV4,
         },
         userId: {
             type: DataTypes.UUID,
@@ -26,8 +26,8 @@ Notification.init(
             type: DataTypes.STRING,
         },
         readStatus: {
-            type: DataTypes.ENUM("read","unread"),
-            defaultValue:'unread'
+            type: DataTypes.ENUM("read", "unread"),
+            defaultValue: "unread",
         },
         notificationFromId: {
             type: DataTypes.UUID,
@@ -40,7 +40,7 @@ Notification.init(
             type: DataTypes.DATE,
         },
         notificationType: {
-            type: DataTypes.ENUM("purchase",'transaction',"other"),
+            type: DataTypes.ENUM("purchase", "transaction", "other"),
         },
         updatedAt: {
             allowNull: true,

@@ -12,12 +12,13 @@ import {
 } from "../utils/Utils";
 import express from "express";
 import User from "../models/Users";
-import {Contact } from "../models/Contacts";
+import { Contact } from "../models/Contacts";
 import MailService from "../services/MailService";
-import {BankCardDetail } from "../models/BankCardDetails";
-import {Transferee } from "../models/Transferees";
+import { BankCardDetail } from "../models/BankCardDetails";
+import { Transferee } from "../models/Transferees";
 import SMS from "../services/SMS";
-import {NotificationDetail } from "../models/NotificationDetails";
+import { NotificationDetail } from "../models/NotificationDetails";
+import { runCreateUserProducer } from "../events/producers";
 // importFollower from "../models/ComFollowers";
 // import {ProductSale } from "../models/ComProductSales";
 // import {ProductAffiliate } from "../models/ComProductAffiliates";
@@ -66,6 +67,8 @@ export default (router: express.Application) => {
                     await contactInfo.reload();
                     console.log(err);
 
+                    await runCreateUserProducer(personalInfo.dataValues);
+
                     response
                         .status(responseStatusCode.UNPROCESSIBLE_ENTITY)
                         .json({
@@ -77,7 +80,7 @@ export default (router: express.Application) => {
                 response.status(responseStatusCode.CREATED).json({
                     status: responseStatus.SUCCESS,
                     message: "User created successfully",
-                    item: { newPersonalInfo, newContactInfo },
+                    data: { newPersonalInfo, newContactInfo },
                 });
             } catch (err) {
                 console.log(err);
@@ -98,7 +101,7 @@ export default (router: express.Application) => {
                 console.log(users);
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: users.map((user) => {
+                    data: users.map((user) => {
                         return {
                             ...user.dataValues,
                             fullName: user.getFullname(),
@@ -109,7 +112,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -129,11 +132,13 @@ export default (router: express.Application) => {
                     where: { userId },
                 });
 
-                let newMediaResponse = await fetch(`http://127.0.0.1:6000/follows/proxy/f-f/${userId}`);
-                let {item:mediaData} = await newMediaResponse.json()
-                let {followers,followings,totalLikes,totalPosts} = mediaData
+                let newMediaResponse = await fetch(
+                    `http://127.0.0.1:6000/follows/proxy/f-f/${userId}`
+                );
+                let { data: mediaData } = await newMediaResponse.json();
+                let { followers, followings, totalLikes, totalPosts } =
+                    mediaData;
 
-             
                 if (!personal) {
                     response.status(responseStatusCode.NOT_FOUND).json({
                         status: responseStatus.ERROR,
@@ -144,7 +149,7 @@ export default (router: express.Application) => {
                 console.log({ data: personal, contact });
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    item: {
+                    data: {
                         personal: {
                             ...personal.dataValues,
                             fullName: personal.getFullname(),
@@ -153,25 +158,24 @@ export default (router: express.Application) => {
                         followers: {
                             ...followers,
                             rows: followers.rows.map(
-                                (follower:any) => follower.dataValues
+                                (follower: any) => follower.dataValues
                             ),
                         },
                         followings: {
                             ...followings,
                             rows: followings.rows.map(
-                                (following:any) => following.dataValues
+                                (following: any) => following.dataValues
                             ),
                         },
                         totalLikes,
-                        totalPosts
-
+                        totalPosts,
                     },
                 });
             } catch (err) {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -183,10 +187,10 @@ export default (router: express.Application) => {
         "/auth/users/:userId/personal/",
         async (request: express.Request, response: express.Response) => {
             try {
-                let { key, value} = request.body;
-                let {userId} = request.query
+                let { key, value } = request.body;
+                let { userId } = request.query;
                 let personalInfo = await User.findOne({
-                    where: {userId},
+                    where: { userId },
                 });
                 if (personalInfo) {
                     if (key === "password") {
@@ -196,7 +200,7 @@ export default (router: express.Application) => {
                         response.status(responseStatusCode.ACCEPTED).json({
                             status: responseStatus.SUCCESS,
                             message: `Successfuly update a user's ${key}`,
-                            item: personalInfo,
+                            data: personalInfo,
                         });
                     } else if (key === "pinCode") {
                         personalInfo?.set(key, await hashData(value));
@@ -205,7 +209,7 @@ export default (router: express.Application) => {
                         response.status(responseStatusCode.ACCEPTED).json({
                             status: responseStatus.SUCCESS,
                             message: `Successfuly update a user's ${key}`,
-                            item: personalInfo,
+                            data: personalInfo,
                         });
                     } else {
                         personalInfo?.set(key, value);
@@ -214,7 +218,7 @@ export default (router: express.Application) => {
                         response.status(responseStatusCode.ACCEPTED).json({
                             status: responseStatus.SUCCESS,
                             message: `Successfuly update a user's ${key}`,
-                            item: info,
+                            data: info,
                         });
                     }
                 } else {
@@ -229,7 +233,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -241,8 +245,8 @@ export default (router: express.Application) => {
         "/auth/users/:userId/contact/",
         async (request: express.Request, response: express.Response) => {
             try {
-                let { key, value} = request.body;
-                let {userId} = request.query
+                let { key, value } = request.body;
+                let { userId } = request.query;
                 let contactInfo = await Contact.findOne({
                     where: { userId },
                 });
@@ -253,7 +257,7 @@ export default (router: express.Application) => {
                     response.status(responseStatusCode.ACCEPTED).json({
                         status: responseStatus.SUCCESS,
                         message: `Successfuly update a user's ${key} info`,
-                        item: info,
+                        data: info,
                     });
                 } else {
                     response
@@ -267,7 +271,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -300,7 +304,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -337,15 +341,20 @@ export default (router: express.Application) => {
                             createdAt: new Date(),
                             notificationToken: notificationToken,
                         };
-                        let createdObject =
-                            await NotificationDetail.create(
-                                notificationObject
-                            );
+                        let createdObject = await NotificationDetail.create(
+                            notificationObject
+                        );
                         console.log(userInfo);
-                        let fetchResponse = await fetch(`http://127.0.0.1:6000/blogs/proxy/f-f/${userInfo.getDataValue('id')}`);
-                        var {item} = await fetchResponse.json()
-                        let {followings} = item
-                        let followingIds = followings?.rows.map((f:any) => f.getDataValue("followingId"));
+                        let fetchResponse = await fetch(
+                            `http://127.0.0.1:6000/blogs/proxy/f-f/${userInfo.getDataValue(
+                                "id"
+                            )}`
+                        );
+                        var { data } = await fetchResponse.json();
+                        let { followings } = data;
+                        let followingIds = followings?.rows.map((f: any) =>
+                            f.getDataValue("followingId")
+                        );
                         let loginToken = await jwtEncode({
                             id: userInfo.getDataValue("userId"),
                             email: userInfo.getDataValue("email"),
@@ -357,7 +366,7 @@ export default (router: express.Application) => {
                         response.status(responseStatusCode.CREATED).json({
                             status: responseStatus.SUCCESS,
                             message: `Login successfully`,
-                            item:{token: loginToken},
+                            data: { token: loginToken },
                         });
                     } else {
                         response.status(responseStatusCode.UNATHORIZED).json({
@@ -375,8 +384,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
-                   
+                    message: String(err),
                 });
             }
         }
@@ -408,7 +416,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -439,7 +447,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -463,14 +471,14 @@ export default (router: express.Application) => {
                     response.status(responseStatusCode.OK).json({
                         status: responseStatus.SUCCESS,
                         message: "Email sent successfully",
-                        item: { confirmationCode: code },
+                        data: { confirmationCode: code },
                     });
                 }
             } catch (err) {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -482,9 +490,9 @@ export default (router: express.Application) => {
         "/auth/checkpassword/",
         async (request: express.Request, response: express.Response) => {
             try {
-                let { password, userId} = request.body;
+                let { password, userId } = request.body;
                 let userInfo = await User.findOne({
-                    where: {userId},
+                    where: { userId },
                 });
 
                 if (userInfo) {
@@ -519,7 +527,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -558,13 +566,13 @@ export default (router: express.Application) => {
                 response.status(responseStatusCode.CREATED).json({
                     status: responseStatus.SUCCESS,
                     message: "Credit/Debit card successfully added",
-                    item: bankInfo,
+                    data: bankInfo,
                 });
             } catch (err) {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -586,7 +594,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -617,7 +625,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -637,7 +645,7 @@ export default (router: express.Application) => {
                     response.status(responseStatusCode.DELETED).json({
                         status: responseStatus.SUCCESS,
                         message: "Successfully deleted Credit/Debit Card",
-                        item: deleteObj,
+                        data: deleteObj,
                     });
                 } else {
                     response
@@ -651,7 +659,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -679,7 +687,7 @@ export default (router: express.Application) => {
                     response.status(responseStatusCode.CREATED).json({
                         status: responseStatus.SUCCESS,
                         message: `Successfuly update a user's phonenumber`,
-                        item: info,
+                        data: info,
                     });
                 } else {
                     response
@@ -693,7 +701,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -735,7 +743,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -754,13 +762,13 @@ export default (router: express.Application) => {
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
                     message: "Message sent successfully",
-                    item: { confirmationCode: code },
+                    data: { confirmationCode: code },
                 });
             } catch (err) {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -775,7 +783,8 @@ export default (router: express.Application) => {
                 let data = request.body;
 
                 let transfereeInfo = await Transferee.create({
-                    ...data});
+                    ...data,
+                });
                 try {
                     await transfereeInfo.save();
                 } catch (err) {
@@ -799,7 +808,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -818,13 +827,13 @@ export default (router: express.Application) => {
                 console.log(transferees);
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: transferees,
+                    data: transferees,
                 });
             } catch (err) {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -844,8 +853,8 @@ export default (router: express.Application) => {
                     response.status(responseStatusCode.DELETED).json({
                         status: responseStatus.SUCCESS,
                         message: "Successfully deleted a Transferee",
-                        item:{deleteObj: deleteObj}
-                        });
+                        data: { deleteObj: deleteObj },
+                    });
                 } else {
                     response
                         .status(responseStatusCode.UNPROCESSIBLE_ENTITY)
@@ -858,7 +867,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -891,7 +900,7 @@ export default (router: express.Application) => {
                 console.log(err);
                 response.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message:String(err),
+                    message: String(err),
                 });
             }
         }
@@ -899,12 +908,9 @@ export default (router: express.Application) => {
 
     /// GETS ROUTES
 
-    router.get(
-        "/",
-        (request: express.Request, response: express.Response) => {
-            response.status(responseStatusCode.OK).json({
-                status: responseStatus.SUCCESS,
-            });
-        }
-    );
+    router.get("/", (request: express.Request, response: express.Response) => {
+        response.status(responseStatusCode.OK).json({
+            status: responseStatus.SUCCESS,
+        });
+    });
 };
