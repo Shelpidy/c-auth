@@ -1,6 +1,7 @@
 import { Kafka, Consumer } from "kafkajs";
 import dotenv from "dotenv";
 import {
+    addNotification,
     addUser,
     deleteUser,
     updateUser,
@@ -31,6 +32,7 @@ export async function runUserConsumer() {
                 "DELETE_USER",
                 "UPDATE_USER",
                 "UPDATE_USER_VERIFICATION",
+                "ADD_NOTIFICATION"
             ],
             fromBeginning: true,
         });
@@ -65,6 +67,9 @@ export async function runUserConsumer() {
                             break;
                         case "UPDATE_USER_VERIFICATION":
                             await updateUserVerification(data);
+                            break;
+                        case "ADD_NOTIFICATION":
+                            await addNotification(data);
                             break;
                         default:
                             // Handle other topics if necessary

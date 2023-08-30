@@ -1,15 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
 import authorizeApiAccess from "./middlewares/ApiAccess";
-import CommodityController from "./controllers/CommodityController";
-import TransactionController from "./controllers/TransactionController";
 import AuthController from "./controllers/AuthController";
 // import MailController from "./controllers/MailController";
 import NotificationController from "./controllers/NotificationController";
-import MediaController from "./controllers/MediaController";
-import MarketingController from "./controllers/MarketingController";
 import CORS from "cors";
-import GeneralControllers from "./controllers/GeneralControllers";
+import { runUserConsumer } from "./events/consumers";
+
 
 dotenv.config();
 
@@ -22,12 +19,13 @@ app.use(CORS());
 
 AuthController(app);
 // MailController(app);
-MediaController(app);
-CommodityController(app);
-TransactionController(app);
 NotificationController(app);
-MarketingController(app);
-GeneralControllers(app);
+
+// runUserConsumer().then(()=>{
+//     console.log("Consumer Running")
+// }).catch(err =>{
+//     console.log("Consumer Error =>",err)
+// })
 
 app.get("/", (request: express.Request, response: express.Response) => {
     response.status(200).json({

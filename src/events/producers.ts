@@ -106,7 +106,7 @@ export async function runCreateUserProducer(value: UserType) {
     try {
         await producer.connect();
         producer.send({
-            topic: "CREATE_USER",
+            topic: "ADD_USER",
             messages: [
                 {
                     value: JSON.stringify({

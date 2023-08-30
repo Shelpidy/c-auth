@@ -19,6 +19,9 @@ import { Transferee } from "../models/Transferees";
 import SMS from "../services/SMS";
 import { NotificationDetail } from "../models/NotificationDetails";
 import { runCreateUserProducer } from "../events/producers";
+import { Sequelize } from "sequelize";
+import sequelize from "../database/connection";
+import axios from "axios";
 // importFollower from "../models/ComFollowers";
 // import {ProductSale } from "../models/ComProductSales";
 // import {ProductAffiliate } from "../models/ComProductAffiliates";
@@ -55,19 +58,21 @@ export default (router: express.Application) => {
                         where: { email },
                     });
                     if (savePersonalData) {
+                        let usersCount = await User.count()
                         let accountNumber = await generateAccountNumber(
-                            savePersonalData.get("userId")
+                            usersCount
                         );
                         console.log(accountNumber);
                         savePersonalData.set("accountNumber", accountNumber);
                         newPersonalInfo = await savePersonalData.save();
+                        await runCreateUserProducer(newPersonalInfo.dataValues);
                     }
                 } catch (err) {
                     await personalInfo.reload();
                     await contactInfo.reload();
                     console.log(err);
 
-                    await runCreateUserProducer(personalInfo.dataValues);
+                   
 
                     response
                         .status(responseStatusCode.UNPROCESSIBLE_ENTITY)
@@ -124,20 +129,20 @@ export default (router: express.Application) => {
         "/auth/users/:userId",
         async (request: express.Request, response: express.Response) => {
             try {
-                let userId = request.params?.userId;
+                let userId = request.params.userId;
                 let personal = await User.findOne({
                     where: { userId },
                 });
                 let contact = await Contact.findOne({
                     where: { userId },
                 });
-
-                let newMediaResponse = await fetch(
-                    `http://127.0.0.1:6000/follows/proxy/f-f/${userId}`
+                let {data,status} = await axios.get(
+                    `http://192.168.1.93:6000/follows/proxy/f-f/${userId}`,{
+                        headers:{Authorization:`Bearer ${response.locals.token}`}
+                    }
                 );
-                let { data: mediaData } = await newMediaResponse.json();
-                let { followers, followings, totalLikes, totalPosts } =
-                    mediaData;
+                console.log("Fetched data from blog",data)
+                let { followings,followers,totalLikes,totalPosts} = data.data;
 
                 if (!personal) {
                     response.status(responseStatusCode.NOT_FOUND).json({
@@ -335,7 +340,7 @@ export default (router: express.Application) => {
                     );
                     if (isMatch) {
                         let notificationObject = {
-                            userId: userInfo.getDataValue("id"),
+                            userId: userInfo.getDataValue("userId"),
                             deviceId: deviceId,
                             deviceName: deviceName,
                             createdAt: new Date(),
@@ -345,18 +350,18 @@ export default (router: express.Application) => {
                             notificationObject
                         );
                         console.log(userInfo);
-                        let fetchResponse = await fetch(
-                            `http://127.0.0.1:6000/blogs/proxy/f-f/${userInfo.getDataValue(
-                                "id"
-                            )}`
+                        let {data,status} = await axios.get(
+                            `http://192.168.1.93:6000/follows/proxy/f-f/${userInfo.getDataValue("userId")}`,{
+                                headers:{Authorization:`Bearer ${response.locals.token}`}
+                            }
                         );
-                        var { data } = await fetchResponse.json();
+                        console.log("Fetched data from blog",data)
                         let { followings } = data;
                         let followingIds = followings?.rows.map((f: any) =>
                             f.getDataValue("followingId")
                         );
                         let loginToken = await jwtEncode({
-                            id: userInfo.getDataValue("userId"),
+                            userId: userInfo.getDataValue("userId"),
                             email: userInfo.getDataValue("email"),
                             accountNumber:
                                 userInfo.getDataValue("accountNumber"),
