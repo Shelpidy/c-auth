@@ -136,11 +136,21 @@ export default (router: express.Application) => {
                 let contact = await Contact.findOne({
                     where: { userId },
                 });
-                let {data,status} = await axios.get(
+                let {data,status:blogReponseStatus} = await axios.get(
                     `http://192.168.1.93:6000/follows/proxy/f-f/${userId}`,{
                         headers:{Authorization:`Bearer ${response.locals.token}`}
                     }
                 );
+
+
+                let {data:statusData,status:chatResponseStatus} = await axios.get(
+                    `http://192.168.1.93:8080/user-status/proxy/${userId}`,{
+                        headers:{Authorization:`Bearer ${response.locals.token}`}
+                    }
+                );
+
+                let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+
                 console.log("Fetched data from blog",data)
                 let { followings,followers,totalLikes,totalPosts} = data.data;
 
@@ -158,6 +168,7 @@ export default (router: express.Application) => {
                         personal: {
                             ...personal.dataValues,
                             fullName: personal.getFullname(),
+                            lastSeenStatus:lastSeenStatus
                         },
                         contact: contact?.dataValues,
                         followers: {
@@ -349,7 +360,7 @@ export default (router: express.Application) => {
                         let createdObject = await NotificationDetail.create(
                             notificationObject
                         );
-                        console.log(userInfo);
+                        console.log({userInfo,createdObject});
                         let {data,status} = await axios.get(
                             `http://192.168.1.93:6000/follows/proxy/f-f/${userInfo.getDataValue("userId")}`,{
                                 headers:{Authorization:`Bearer ${response.locals.token}`}
