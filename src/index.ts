@@ -7,7 +7,6 @@ import NotificationController from "./controllers/NotificationController";
 import CORS from "cors";
 import { runUserConsumer } from "./events/consumers";
 
-
 dotenv.config();
 
 const PORT = process.env.PORT;

@@ -34,8 +34,8 @@ Contact.init(
                 model: "Users",
                 key: "userId",
             },
-            onDelete:"CASCADE",
-            onUpdate:"CASCADE"
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE",
         },
         createdAt: {
             allowNull: false,

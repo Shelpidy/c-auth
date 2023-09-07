@@ -7,13 +7,12 @@ const BROKER_1 = process.env.BROKER_1 ?? "";
 const BROKER_2 = process.env.BROKER_2 ?? "";
 
 const kafkaConfig: KafkaConfig = {
-    brokers: [BROKER_1,BROKER_2],
+    brokers: [BROKER_1, BROKER_2],
     clientId: process.env.SERVER_ID,
 };
 
 const kafka = new Kafka(kafkaConfig);
 const admin: Admin = kafka.admin();
-
 
 async function createTopics() {
     try {

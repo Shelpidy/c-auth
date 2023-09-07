@@ -32,7 +32,7 @@ export async function runUserConsumer() {
                 "DELETE_USER",
                 "UPDATE_USER",
                 "UPDATE_USER_VERIFICATION",
-                "ADD_NOTIFICATION"
+                "ADD_NOTIFICATION",
             ],
             fromBeginning: true,
         });

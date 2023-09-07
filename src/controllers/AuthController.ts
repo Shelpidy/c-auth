@@ -22,6 +22,18 @@ import { runCreateUserProducer } from "../events/producers";
 import { Sequelize } from "sequelize";
 import sequelize from "../database/connection";
 import axios from "axios";
+import NotificationService from "../services/NotificationService";
+
+type NotificationData = {
+    token: string;
+    body: string;
+    title: string;
+    data: {
+        url: string;
+    };
+};
+
+let notification = new NotificationService()
 // importFollower from "../models/ComFollowers";
 // import {ProductSale } from "../models/ComProductSales";
 // import {ProductAffiliate } from "../models/ComProductAffiliates";
@@ -58,7 +70,7 @@ export default (router: express.Application) => {
                         where: { email },
                     });
                     if (savePersonalData) {
-                        let usersCount = await User.count()
+                        let usersCount = await User.count();
                         let accountNumber = await generateAccountNumber(
                             usersCount
                         );
@@ -71,8 +83,6 @@ export default (router: express.Application) => {
                     await personalInfo.reload();
                     await contactInfo.reload();
                     console.log(err);
-
-                   
 
                     response
                         .status(responseStatusCode.UNPROCESSIBLE_ENTITY)
@@ -136,23 +146,32 @@ export default (router: express.Application) => {
                 let contact = await Contact.findOne({
                     where: { userId },
                 });
-                let {data,status:blogReponseStatus} = await axios.get(
-                    `http://192.168.1.93:6000/follows/proxy/f-f/${userId}`,{
-                        headers:{Authorization:`Bearer ${response.locals.token}`}
+                let { data, status: blogReponseStatus } = await axios.get(
+                    `http://192.168.1.93:6000/follows/proxy/f-f/${userId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${response.locals.token}`,
+                        },
                     }
                 );
 
+                let { data: statusData, status: chatResponseStatus } =
+                    await axios.get(
+                        `http://192.168.1.93:8080/user-status/proxy/${userId}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${response.locals.token}`,
+                            },
+                        }
+                    );
 
-                let {data:statusData,status:chatResponseStatus} = await axios.get(
-                    `http://192.168.1.93:8080/user-status/proxy/${userId}`,{
-                        headers:{Authorization:`Bearer ${response.locals.token}`}
-                    }
-                );
+                let lastSeenStatus =
+                    (statusData?.online ? "online" : statusData?.lastSeen) ??
+                    "";
 
-                let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
-
-                console.log("Fetched data from blog",data)
-                let { followings,followers,totalLikes,totalPosts} = data.data;
+                console.log("Fetched data from blog", data);
+                let { followings, followers, totalLikes, totalPosts } =
+                    data.data;
 
                 if (!personal) {
                     response.status(responseStatusCode.NOT_FOUND).json({
@@ -168,7 +187,7 @@ export default (router: express.Application) => {
                         personal: {
                             ...personal.dataValues,
                             fullName: personal.getFullname(),
-                            lastSeenStatus:lastSeenStatus
+                            lastSeenStatus: lastSeenStatus,
                         },
                         contact: contact?.dataValues,
                         followers: {
@@ -360,13 +379,28 @@ export default (router: express.Application) => {
                         let createdObject = await NotificationDetail.create(
                             notificationObject
                         );
-                        console.log({userInfo,createdObject});
-                        let {data,status} = await axios.get(
-                            `http://192.168.1.93:6000/follows/proxy/f-f/${userInfo.getDataValue("userId")}`,{
-                                headers:{Authorization:`Bearer ${response.locals.token}`}
+
+                        let notDetails = (await NotificationDetail.findAll({
+                            where: {deviceId,userId:userInfo?.getDataValue("userId")}}))
+                        
+                        let notificationTokens = await Promise.all(
+                            notDetails.map(async(notDetail)=>{
+                                return notDetail.getDataValue("notificationToken")
+                            })
+                        )
+
+                        console.log({ userInfo, createdObject });
+                        let { data, status } = await axios.get(
+                            `http://192.168.1.93:6000/follows/proxy/f-f/${userInfo.getDataValue(
+                                "userId"
+                            )}`,
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${response.locals.token}`,
+                                },
                             }
                         );
-                        console.log("Fetched data from blog",data)
+                        console.log("Fetched data from blog", data);
                         let { followings } = data;
                         let followingIds = followings?.rows.map((f: any) =>
                             f.getDataValue("followingId")
@@ -375,10 +409,24 @@ export default (router: express.Application) => {
                             userId: userInfo.getDataValue("userId"),
                             email: userInfo.getDataValue("email"),
                             accountNumber:
-                                userInfo.getDataValue("accountNumber"),
+                            userInfo.getDataValue("accountNumber"),
                             deviceId: createdObject.getDataValue("deviceId"),
+                            notificationTokens,
                             followingIds,
                         });
+
+                        let loginNotificationMessage:NotificationData = {
+                            token:notificationToken,
+                            body:`You have loggedIn successfully as ${email} with a device ${deviceName}`,
+                            title:"LOGIN SUMMARY",
+                            data:{
+                                url:"com.commodity.sl:/notifications"
+                            }
+
+                        }
+
+                        await notification.sendNotification([loginNotificationMessage])
+                        
                         response.status(responseStatusCode.CREATED).json({
                             status: responseStatus.SUCCESS,
                             message: `Login successfully`,
