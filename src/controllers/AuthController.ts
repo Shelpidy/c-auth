@@ -147,7 +147,7 @@ export default (router: express.Application) => {
                     where: { userId },
                 });
                 let { data, status: blogReponseStatus } = await axios.get(
-                    `http://192.168.1.93:6000/follows/proxy/f-f/${userId}`,
+                    `http://192.168.1.98:6000/follows/proxy/f-f/${userId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${response.locals.token}`,
@@ -157,16 +157,16 @@ export default (router: express.Application) => {
 
                 let { data: statusData, status: chatResponseStatus } =
                     await axios.get(
-                        `http://192.168.1.93:8080/user-status/proxy/${userId}`,
+                        `http://192.168.1.98:8080/user-status/proxy/${userId}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${response.locals.token}`,
                             },
                         }
                     );
-
+                console.log(statusData)
                 let lastSeenStatus =
-                    (statusData?.online ? "online" : statusData?.lastSeen) ??
+                    (statusData.data?.online ? "online" : statusData.data?.lastSeen) ??
                     "";
 
                 console.log("Fetched data from blog", data);
@@ -180,7 +180,7 @@ export default (router: express.Application) => {
                     });
                     return;
                 }
-                console.log({ data: personal, contact });
+                console.log({ data: personal, contact,statusData });
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
                     data: {
@@ -380,6 +380,8 @@ export default (router: express.Application) => {
                             notificationObject
                         );
 
+                        console.log({createdObject})
+
                         let notDetails = (await NotificationDetail.findAll({
                             where: {deviceId,userId:userInfo?.getDataValue("userId")}}))
                         
@@ -391,7 +393,7 @@ export default (router: express.Application) => {
 
                         console.log({ userInfo, createdObject });
                         let { data, status } = await axios.get(
-                            `http://192.168.1.93:6000/follows/proxy/f-f/${userInfo.getDataValue(
+                            `http://192.168.1.98:6000/follows/proxy/f-f/${userInfo.getDataValue(
                                 "userId"
                             )}`,
                             {
