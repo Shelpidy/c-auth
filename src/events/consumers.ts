@@ -40,42 +40,53 @@ export async function runUserConsumer() {
 
         await consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
-                const { serverId, ...data } = JSON.parse(
-                    message.value?.toString() || "{}"
-                );
-
-                console.log("User Data from producer", {
-                    topic,
-                    partition,
-                    data,
-                    serverId,
-                });
-
-                if (serverId === SERVER_ID) {
-                    // Do nothing if the message originated from this server
-                } else {
-                    switch (topic) {
-                        case "ADD_USER":
-                            await addUser(data);
-                            // await transferCommodity(data as TransferCommodityParams);
-                            break;
-                        case "DELETE_USER":
-                            await deleteUser(data);
-                            break;
-                        case "UPDATE_USER":
-                            await updateUser(data);
-                            break;
-                        case "UPDATE_USER_VERIFICATION":
-                            await updateUserVerification(data);
-                            break;
-                        case "ADD_NOTIFICATION":
-                            await addNotification(data);
-                            break;
-                        default:
-                            // Handle other topics if necessary
-                            break;
+                try{
+                    const { serverId, ...data } = JSON.parse(
+                        message.value?.toString() || "{}"
+                    );
+    
+                    console.log("User Data from producer", {
+                        topic,
+                        partition,
+                        data,
+                        serverId,
+                    });
+    
+                    if (serverId === SERVER_ID) {
+                        // Do nothing if the message originated from this server
+                    } else {
+                        switch (topic) {
+                            case "ADD_USER":
+                                await addUser(data);
+                                // await transferCommodity(data as TransferCommodityParams);
+                                break;
+                            case "DELETE_USER":
+                                await deleteUser(data);
+                                break;
+                            case "UPDATE_USER":
+                                await updateUser(data);
+                                break;
+                            case "UPDATE_USER_VERIFICATION":
+                                await updateUserVerification(data);
+                                break;
+                            case "ADD_NOTIFICATION":
+                                await addNotification(data);
+                                break;
+                            default:
+                                // Handle other topics if necessary
+                                break;
+                        }
                     }
+    
+                    await consumer.commitOffsets([{ topic, partition, offset: message.offset }]);
+
+                }catch(err){
+                    console.log(err)
+                    await consumer.commitOffsets([{ topic, partition, offset: message.offset }]);
+
+                    
                 }
+
             },
         });
     } catch (err) {

@@ -6,6 +6,7 @@ import {
     getResponseBody,
 } from "../utils/Utils";
 import User from "../models/Users";
+import { NotificationDetail } from "../models/NotificationDetails";
 
 export default (router: express.Application) => {
     //////////////////////// GET NOTIFICATIONS BY USERID //////////////////////////
@@ -162,6 +163,38 @@ export default (router: express.Application) => {
             }
         }
     );
+
+    /////////////////// GET NOTIFICATION TOKEN ///////////////////////////
+
+
+    router.get(
+        "/notifications/token/:userId",
+        async (request: express.Request, response: express.Response) => {
+            try {
+                let userId = request.params.userId;
+                let notificationDetails = await NotificationDetail.findAll({
+                    where: { userId },
+                });
+
+                let noficationTokens = await Promise.all(notificationDetails.map(async (notificationDetail)=>{
+                    let token = notificationDetail.getDataValue("notificationToken");
+                    return token
+                }))
+                response.status(responseStatusCode.OK).json({
+                    status: responseStatus.SUCCESS,
+                    data:noficationTokens,
+                })
+            } catch (err) {
+                console.log(err);
+                response.status(responseStatusCode.BAD_REQUEST).json({
+                    status: responseStatus.ERROR,
+                    message: String(err),
+                });
+            }
+        }
+    );
+
+
 
     //////////////////// GET NOTIFICATION VIEW FOR PRODUCT ////////////////
 

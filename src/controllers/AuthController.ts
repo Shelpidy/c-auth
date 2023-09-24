@@ -382,16 +382,8 @@ export default (router: express.Application) => {
 
                         console.log({createdObject})
 
-                        let notDetails = (await NotificationDetail.findAll({
-                            where: {deviceId,userId:userInfo?.getDataValue("userId")}}))
-                        
-                        let notificationTokens = await Promise.all(
-                            notDetails.map(async(notDetail)=>{
-                                return notDetail.getDataValue("notificationToken")
-                            })
-                        )
 
-                        console.log({ userInfo, createdObject });
+                        console.log({ userInfo, createdObject});
                         let { data, status } = await axios.get(
                             `http://192.168.1.98:6000/follows/proxy/f-f/${userInfo.getDataValue(
                                 "userId"
@@ -413,7 +405,6 @@ export default (router: express.Application) => {
                             accountNumber:
                             userInfo.getDataValue("accountNumber"),
                             deviceId: createdObject.getDataValue("deviceId"),
-                            notificationTokens,
                             followingIds,
                         });
 
