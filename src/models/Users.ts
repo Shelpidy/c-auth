@@ -1,7 +1,10 @@
 import { DataTypes, Model, Sequelize } from "sequelize";
 import sequelize from "../database/connection";
+import { EncryptionKey } from "./EncryptionKeys";
 
 class User extends Model {
+      // Define a virtual property for publicKey
+
     public getFullname() {
         return (
             this.get("firstName") +
@@ -32,6 +35,9 @@ User.init(
         },
         profileImage: {
             type: DataTypes.STRING,
+        },
+        bio: {
+            type: DataTypes.TEXT,
         },
         password: {
             type: DataTypes.STRING,
@@ -79,5 +85,5 @@ User.init(
         updatedAt: "updatedAt",
     }
 );
-
+User.hasOne(EncryptionKey, { foreignKey: "userId" }); 
 export default User;

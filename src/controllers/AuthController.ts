@@ -1,4 +1,5 @@
 import {
+    Key,
     encryptBankCardNumber,
     generateAccountNumber,
     generateEmailHTML,
@@ -23,6 +24,7 @@ import { Sequelize } from "sequelize";
 import sequelize from "../database/connection";
 import axios from "axios";
 import NotificationService from "../services/NotificationService";
+import { EncryptionKey } from "../models/EncryptionKeys";
 
 type NotificationData = {
     token: string;
@@ -43,6 +45,7 @@ export default (router: express.Application) => {
 
     ///////// CREATE USER
 
+    let key = new Key()
     router.post(
         "/auth/users/",
         async (request: express.Request, response: express.Response) => {
@@ -52,6 +55,7 @@ export default (router: express.Application) => {
                 let email = personal?.email;
                 let password = await hashData(personal.password);
                 let pinCode = await hashData(personal.pinCode);
+                let {privateKey,publicKey} = await key.generateKeys()
                 let newPersonalInfo;
                 let newContactInfo;
                 let personalInfo = await User.create({
@@ -59,6 +63,9 @@ export default (router: express.Application) => {
                     password,
                     pinCode,
                 });
+
+                let keys = await EncryptionKey.create({publicKey,privateKey,userId: personalInfo.getDataValue("userId")})
+
                 let contactInfo = await Contact.create({
                     ...contact,
                     userId: personalInfo.getDataValue("userId"),
@@ -95,7 +102,7 @@ export default (router: express.Application) => {
                 response.status(responseStatusCode.CREATED).json({
                     status: responseStatus.SUCCESS,
                     message: "User created successfully",
-                    data: { newPersonalInfo, newContactInfo },
+                    data: { newPersonalInfo:newPersonalInfo.dataValues, newContactInfo:newContactInfo.dataValues,keys:keys.dataValues, },
                 });
             } catch (err) {
                 console.log(err);
@@ -112,7 +119,14 @@ export default (router: express.Application) => {
         "/auth/users/",
         async (request: express.Request, response: express.Response) => {
             try {
-                let users = await User.findAll();
+                let users = await User.findAll({include: [
+                    {
+                      model: EncryptionKey,
+                      attributes: {
+                        exclude: ["privateKey","encryptionKeyId","createdAt","updatedAt","userId"],
+                      },
+                    },
+                  ],});
                 console.log(users);
                 response.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
@@ -142,6 +156,14 @@ export default (router: express.Application) => {
                 let userId = request.params.userId;
                 let personal = await User.findOne({
                     where: { userId },
+                    include: [
+                        {
+                          model: EncryptionKey,
+                          attributes: {
+                            exclude: ["privateKey","encryptionKeyId","createdAt","updatedAt","userId"],
+                          },
+                        },
+                      ],
                 });
                 let contact = await Contact.findOne({
                     where: { userId },
@@ -380,10 +402,7 @@ export default (router: express.Application) => {
                             notificationObject
                         );
 
-                        console.log({createdObject})
-
-
-                        console.log({ userInfo, createdObject});
+                     
                         let { data, status } = await axios.get(
                             `http://192.168.1.98:6000/follows/proxy/f-f/${userInfo.getDataValue(
                                 "userId"
@@ -399,6 +418,9 @@ export default (router: express.Application) => {
                         let followingIds = followings?.rows.map((f: any) =>
                             f.getDataValue("followingId")
                         );
+
+                        let keys = await EncryptionKey.findOne({where:{userId:userInfo.getDataValue("userId")}})
+
                         let loginToken = await jwtEncode({
                             userId: userInfo.getDataValue("userId"),
                             email: userInfo.getDataValue("email"),
@@ -406,6 +428,7 @@ export default (router: express.Application) => {
                             userInfo.getDataValue("accountNumber"),
                             deviceId: createdObject.getDataValue("deviceId"),
                             followingIds,
+                            keys
                         });
 
                         let loginNotificationMessage:NotificationData = {

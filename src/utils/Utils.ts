@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { Notification } from "../models/Notifications";
 import NotificationService from "../services/NotificationService";
 import User from "../models/Users";
+import crypto from "node:crypto"
 
 // import CommodityProduct from "../models/ComProducts";
 // import { CommodityProductSale } from "../models/ComProductSales";
@@ -442,5 +443,50 @@ export async function updateUser(data: {
         }
     } catch (err) {
         throw err;
+    }
+}
+
+
+
+// Generate a new RSA key pair
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+  modulusLength: 4096, // You can adjust the key size as needed
+  publicKeyEncoding: {
+    type: 'spki',
+    format: 'pem',
+  },
+  privateKeyEncoding: {
+    type: 'pkcs8',
+    format: 'pem',
+  },
+});
+
+
+
+export class Key{
+    private publicKey:string;
+    private privateKey:string;
+    constructor(){
+        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+            modulusLength: 4096, // You can adjust the key size as needed
+            publicKeyEncoding: {
+              type: 'spki',
+              format: 'pem',
+            },
+            privateKeyEncoding: {
+              type: 'pkcs8',
+              format: 'pem',
+            },
+          });
+          
+        this.privateKey = privateKey;
+        this.publicKey= publicKey;
+    }
+
+    /**
+     * generateKeys
+     */
+    public async generateKeys():Promise<{publicKey:string,privateKey:string}>{
+        return {publicKey:this.publicKey,privateKey:this.privateKey};
     }
 }
