@@ -479,8 +479,8 @@ export class Key{
             },
           });
           
-        this.privateKey = privateKey;
-        this.publicKey= publicKey;
+        this.privateKey = privateKey
+        this.publicKey= publicKey
     }
 
     /**
