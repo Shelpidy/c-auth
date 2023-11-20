@@ -241,11 +241,11 @@ export default (router: express.Application) => {
     //////////// UPDATE USER PERSONAL INFO ///////////////
 
     router.put(
-        "/auth/users/:userId/personal/",
+        "/auth/users/personal/",
         async (request: express.Request, response: express.Response) => {
             try {
                 let { key, value } = request.body;
-                let { userId } = request.query;
+                let { userId } = response.locals;
                 let personalInfo = await User.findOne({
                     where: { userId },
                 });
@@ -266,7 +266,7 @@ export default (router: express.Application) => {
                         response.status(responseStatusCode.ACCEPTED).json({
                             status: responseStatus.SUCCESS,
                             message: `Successfuly update a user's ${key}`,
-                            data: personalInfo,
+                            data: personalInfo.dataValues,
                         });
                     } else {
                         personalInfo?.set(key, value);
@@ -299,11 +299,11 @@ export default (router: express.Application) => {
     //////////// UPDATE USER CONTACT INFO ////////////////////
 
     router.put(
-        "/auth/users/:userId/contact/",
+        "/auth/users/contact/",
         async (request: express.Request, response: express.Response) => {
             try {
                 let { key, value } = request.body;
-                let { userId } = request.query;
+                let { userId } = response.locals;
                 let contactInfo = await Contact.findOne({
                     where: { userId },
                 });
@@ -314,7 +314,7 @@ export default (router: express.Application) => {
                     response.status(responseStatusCode.ACCEPTED).json({
                         status: responseStatus.SUCCESS,
                         message: `Successfuly update a user's ${key} info`,
-                        data: info,
+                        data: info.dataValues,
                     });
                 } else {
                     response
